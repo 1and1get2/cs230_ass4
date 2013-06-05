@@ -1,12 +1,12 @@
 package nz.ac.auckland.q1;
 
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ImageIcon;
 import javax.swing.JTextArea;
@@ -17,9 +17,14 @@ import javax.swing.SwingWorker;
 import java.awt.Font;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+
+import nz.ac.auckland.q2.Generator;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 public class MonkeyFrame extends JFrame implements ActionListener
 {
@@ -55,7 +60,9 @@ public class MonkeyFrame extends JFrame implements ActionListener
 		lblNewLabel.setIcon(new ImageIcon("images/HamletMonkey.jpg"));
 		
 		generatedTextArea = new JTextArea();
+		generatedTextArea.setText("");
 		targetTextArea = new JTextArea();
+		targetTextArea.setText("To be or not to be, that is the question;\nWhether 'tis nobler in the mind to suffer\nThe slings and arrows of outrageous fortune,\nOr to take arms against a sea of troubles,\nAnd by opposing, end them.");
 		
 		btnStart = new JButton("Start");
 		btnStart.setActionCommand("Start");
@@ -163,6 +170,28 @@ public class MonkeyFrame extends JFrame implements ActionListener
 	{
 		if (e.getSource() == btnStart)
 		{
+			
+			// check for errors:
+			try {
+				if (Integer.parseInt(monkeysPerGenerationSizeTextField.getText()) < 1 || Integer.parseInt(monkeysPerGenerationSizeTextField.getText()) > 10000){
+					throw new Exception("PopulationSize out of range (1 - 10000): " + monkeysPerGenerationSizeTextField.getText());
+				}
+				if (targetTextArea.getText().length() < 1 || targetTextArea.getText().length() > 300){
+					throw new Exception("length of targetTextArea: " + targetTextArea.getText().length() + " out of range (1-300)");
+				}
+				for (char c : targetTextArea.getText().toCharArray()){
+					int cInt = (int) c;
+					if (cInt != 10 && cInt != 13 && (cInt < 32 || cInt > 126)){
+						throw new Exception("character " + c + " not in set of {10, 13, 32-126}");
+					}
+				}
+				} catch (Exception exception) {
+					// TODO Auto-generated catch block
+					JOptionPane.showMessageDialog(this, exception.toString());
+					exception.printStackTrace();
+					return;
+				}
+			
 			if (btnStart.getActionCommand() == "Cancel")
 			{
 				sw.cancel(true);
@@ -176,16 +205,29 @@ public class MonkeyFrame extends JFrame implements ActionListener
 			targetTextArea.setEnabled(false);
 			chckbxParallel.setEnabled(false);
 			monkeysPerGenerationSizeTextField.setEnabled(false);
+			;
 			
 			final boolean flag = chckbxParallel.isSelected();
 			
 			sw = new SwingWorker<Void, String>()
 			{
+				int monkeysPerGenerationSizeInt = Integer.parseInt(monkeysPerGenerationSizeTextField.getText());
+				String string = new String();
+				List<Generator> generatorList = new LinkedList<Generator>();
+//				List<Callable<Void>> callables = new LinkedList<Callable<Void>>();
 
 				@Override
 				protected Void doInBackground() throws Exception
 				{
+//					create the initial random population (strings or arrays of valid characters, 
+//					each one same size as the target text size, i.e. TargetText.Length)
 					
+//					Generator generator = new Generator();
+//					string = generator.generateRandomMonkey(targetTextArea.getText().length(), generator.generateStrings());
+					
+					for (int i = 0; i < monkeysPerGenerationSizeInt; i ++){
+						generatorList.add(new Generator());
+					}
 					for (int x = 0 ; x < 100 ; x++)
 					{
 						if (this.isCancelled())
@@ -193,6 +235,7 @@ public class MonkeyFrame extends JFrame implements ActionListener
 						
 						if (x % 10 == 0)
 							publish(String.valueOf(x));
+							
 						
 						Thread.sleep(100);
 					}
@@ -206,6 +249,7 @@ public class MonkeyFrame extends JFrame implements ActionListener
 					if (flag == true)
 						lblUpdateTime.setText(chunks.get(0));
 					
+					generatedTextArea.setText(string);
 					super.process(chunks);
 				}
 

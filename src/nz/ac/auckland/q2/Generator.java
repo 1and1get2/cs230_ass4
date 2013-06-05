@@ -4,6 +4,13 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Generator
 {
+	String string ;
+	char[] validChars;
+	
+	public Generator(){
+		string = new String();
+		validChars = this.generateStrings();
+	}
 
 	public char[] generateStrings()
 	{
@@ -17,6 +24,11 @@ public class Generator
 		return validChars;
 	}
 
+	public String generateRandomMonkey(final int size)
+	{
+		return this.generateRandomMonkey(size, validChars);
+	}
+	
 	public String generateRandomMonkey(final int size, final char[] validChars)
 	{
 		StringBuilder sb = new StringBuilder(size);
