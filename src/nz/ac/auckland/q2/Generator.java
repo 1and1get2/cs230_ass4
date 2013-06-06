@@ -2,8 +2,13 @@ package nz.ac.auckland.q2;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+
 public class Generator
 {
+	//define the constants
+	public static final double CrossoverProbability = 0.87;
+	public static final double MutationProbability = 0.02;
+	
 	String string ;
 	char[] validChars;
 	
@@ -40,5 +45,6 @@ public class Generator
 
 		return sb.toString();
 	}
+	
 
 }

@@ -1,7 +1,7 @@
 package nz.ac.auckland.q4;
 
 import java.util.concurrent.ThreadLocalRandom;
-
+// randomly select a high quality parent
 public class MonkeyMater
 {
 

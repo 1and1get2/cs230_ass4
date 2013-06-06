@@ -32,7 +32,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
-public class MonkeyFrame extends JFrame implements ActionListener
+public class GUI extends JFrame implements ActionListener
 {
 
 	private static final long serialVersionUID = 1L;
@@ -53,7 +53,7 @@ public class MonkeyFrame extends JFrame implements ActionListener
 	/**
 	 * Create the frame.
 	 */
-	public MonkeyFrame()
+	public GUI()
 	{
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -342,7 +342,12 @@ public class MonkeyFrame extends JFrame implements ActionListener
 		}
 		return null;
 	}
-
+	public int getPopulationSize(){
+		return Integer.parseInt((monkeysPerGenerationSizeTextField.getText()));
+	}
+	public boolean isParallel(){
+		return chckbxParallel.isSelected();
+	}
 
 }
 
