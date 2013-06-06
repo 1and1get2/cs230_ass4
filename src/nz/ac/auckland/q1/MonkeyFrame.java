@@ -18,8 +18,6 @@ import java.awt.Font;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import nz.ac.auckland.q2.Generator;
-import nz.ac.auckland.q3.ScoreMatcher;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -216,132 +214,76 @@ public class MonkeyFrame extends JFrame implements ActionListener
 			;
 			
 			final boolean flag = chckbxParallel.isSelected();
-			
 			sw = new SwingWorker<Void, String>()
-			{
+					{
 				int monkeysPerGenerationSizeInt = Integer.parseInt(monkeysPerGenerationSizeTextField.getText());
-
 				String targetString = targetTextArea.getText();
 				String generatedString = new String();
-				String[] string = new String[monkeysPerGenerationSizeInt];
-				int[] currentScore = new int[monkeysPerGenerationSizeInt];
-				List<String> theWholeGenerationList = new LinkedList<String>();
-				List<String> theNewGenerationList = new LinkedList<String>();
-				int theBestMatchIndex = 0;
-//				List<Callable<Void>> callables = new LinkedList<Callable<Void>>();
+				Thread th;
+				int lastGen = 0, gps = 0, time = 0;
+					TextMatchGeneticAlgorithm tmga;
 
-				@Override
-				protected Void doInBackground() throws Exception
-				{
-//					create the initial random population (strings or arrays of valid characters, 
-//					each one same size as the target text size, i.e. TargetText.Length)					
-					for (int i = 0; i < monkeysPerGenerationSizeInt; i ++){
-						theWholeGenerationList.add(new Generator().generateRandomMonkey(targetTextArea.getText().length()));	
-					}
-					
-
-/*					List<Callable<Void>> callables = new LinkedList<Callable<Void>>();
-					if (flag){
-						// Parallel
-						int chunk = 500;
-		                
-		                for (int low = 0; low < monkeysPerGenerationSizeInt; low += chunk) {
-		                    final int Low = low;
-		                    final int High = Math.min(monkeysPerGenerationSizeInt, low+chunk);
-		                    callables.add(new Callable<Void>() {                        
-		                        public Void call() {
-		                            for (int i = Low; i < High; i++) {
-//		                                int k = task(i);
-		                            	// TODO:
-		                            	string = new String[monkeysPerGenerationSizeInt];
-		                            }
-		                            return null;
-		                        }
-		                    });
-							int maxallowed_threads = 1 * Runtime.getRuntime().availableProcessors();
-				            ExecutorService executor = new ForkJoinPool(maxallowed_threads); 
-							List<Future<Void>> futures = executor.invokeAll(callables);
-		                }
-					} else {
-						// sequentially
-						for (int i = 0; i < monkeysPerGenerationSizeInt; i++){
-							//TODO:
+						@Override
+						protected Void doInBackground() throws Exception
+						{
+							tmga = new TextMatchGeneticAlgorithm(flag,targetString,monkeysPerGenerationSizeInt);
+							th = new Thread(tmga);
+							th.start();
 							
-						}
-					}*/
-
-					
-					for (int x = 0 ;; x++)
-					{
-						int genPerSecond = 0;
-						// evolution loop
-						if (this.isCancelled())
-							break;
-						for (int i = 0; i < monkeysPerGenerationSizeInt; i ++){
-//							theWholeGenerationList.add(new Generator().generateRandomMonkey(targetTextArea.getText().length()));
-//							Generator generator = new Generator();
-//							theWholeGenerationList.add(generator.generateRandomMonkey(targetTextArea.getText().length()));
-							// compute fitness scores and find best match of the current generation
-							ScoreMatcher scoreMatcher = new ScoreMatcher();
-							currentScore[i] = scoreMatcher.diff(targetString,theWholeGenerationList.get(i));
-							if (currentScore[0] > currentScore[i]){
-								theBestMatchIndex = i;
-								generatedString = theWholeGenerationList.get(i);
+							for (int x = 0 ; x < 1000000000 ; x++)
+							{
+								generatedString = tmga.findBestMatch();
+								publish(generatedString);
+								if (this.isCancelled())
+									break;
+								
+								if (x % 10 == 0){
+									time = (x/10);
+									gps = (tmga.getGeneration()) - lastGen;
+									lastGen = tmga.getGeneration();
+									publish(""+tmga.getGeneration());
+								}
+								Thread.sleep(100);
 							}
+							
+							return null;
+						}			
+						
+						@Override
+						protected void process(List<String> chunks)
+						{
+							//if (flag == true)
+							lblUpdateTime.setText(""+time);
+							lblUpdateGeneration.setText("" + (lastGen + gps));
+							lblUpdateGenerationPerSec.setText(String.valueOf(gps));
+							generatedTextArea.setText(generatedString);
+							super.process(chunks);
 						}
 
-						
-						if (x % 10 == 0){
-
-							publish(String.valueOf(x));
+						@Override
+						protected void done()
+						{
+							lblUpdateTime.setText("Job done");
+							
+							btnStart.setText("Start");
+							btnStart.setActionCommand("Start");
+							
+							generatedTextArea.setEnabled(true);
+							targetTextArea.setEnabled(true);
+							chckbxParallel.setEnabled(true);
+							monkeysPerGenerationSizeTextField.setEnabled(false);
+							th.stop();
 						}
-						
-						Thread.sleep(100);
-//						Thread.sleep(10);
-					}
-					
-					return null;
-				}			
-				
-				@Override
-				protected void process(List<String> chunks)
-				{
-					//if (flag == true)
-						lblUpdateTime.setText(chunks.get(0));
-					
-					generatedTextArea.setText(chunks.get(1));
-					for (Object s:chunks.toArray()) System.out.println(s.toString());
-					super.process(chunks);
-				}
-
-				@Override
-				protected void done()
-				{
-					lblUpdateTime.setText("Job done");
-					
-					btnStart.setText("Start");
-					btnStart.setActionCommand("Start");
-					
-					generatedTextArea.setEnabled(true);
-					targetTextArea.setEnabled(true);
-					chckbxParallel.setEnabled(true);
-					monkeysPerGenerationSizeTextField.setEnabled(false);
-				}
 
 
-			};
-			
-			sw.execute();
+					};
+					
+					sw.execute();
+
 		}
 		
 	}
-	public List<String> createNewGeneration(List<String> oldGeneration, int populationSize){
-		for (int i = 0; i < populationSize / 2; i++){
-			ScoreMatcher scoreMatcher = new ScoreMatcher();
-			
-		}
-		return null;
-	}
+
 
 
 }

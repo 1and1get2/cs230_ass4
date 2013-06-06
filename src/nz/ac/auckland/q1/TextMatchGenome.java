@@ -47,7 +47,7 @@ public class TextMatchGenome {
 			}
 			fitness = diffs;
 		} else {
-			// TODO: max
+			// TODO: maxFitnessFitnessFitnessFitnessFitnessFitness
 		}
 	}
 
